@@ -4,7 +4,7 @@ Day 1: PandasAI Basic Implementation
 
 English Description:
 This file demonstrates the basic setup and usage of PandasAI with Azure OpenAI.
-It shows how to create a SmartDataframe, configure column descriptions,
+It shows how to use pai.chat() directly with a DataFrame, configure column descriptions,
 enable verbose logging to see prompts, and execute natural language queries.
 
 Key Features:
@@ -13,10 +13,11 @@ Key Features:
 - Column descriptions for enhanced data understanding
 - Verbose logging for prompt inspection
 - Multiple query examples demonstrating different analysis types
+- Direct pai.chat() usage without SmartDataframe
 
 中文描述：
 此文件演示了PandasAI与Azure OpenAI的基本设置和使用。
-它展示了如何创建SmartDataframe、配置列描述、
+它展示了如何直接使用pai.chat()与DataFrame、配置列描述、
 启用详细日志记录以查看提示，并执行自然语言查询。
 
 主要功能：
@@ -25,6 +26,7 @@ Key Features:
 - 用于增强数据理解的列描述
 - 用于提示检查的详细日志记录
 - 演示不同分析类型的多个查询示例
+- 直接使用pai.chat()而不使用SmartDataframe
 
 Usage: python pandasAI.py
 """
@@ -64,26 +66,29 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Create SmartDataframe with column descriptions
-column_descriptions = {
-    "OrderID": "A unique identifier for each sales order.",
-    "CustomerID": "Identifier for the customer who placed the order.",
-    "ProductCategory": "The category of the product sold.",
-    "SalesAmount": "The monetary value of the sale in USD.",
-    "OrderDate": "The date when the order was placed.",
-    "Region": "The geographical region where the sale occurred.",
-}
-
-# Initialize SmartDataframe with verbose logging to see prompts
-sdf = pai.SmartDataframe(
+# Convert to PandasAI DataFrame with column descriptions
+pandasai_df = pai.DataFrame(
     df,
-    config={
+    name="sales_data",
+    description="Sample sales data with order information",
+    column_descriptions={
+        "OrderID": "A unique identifier for each sales order.",
+        "CustomerID": "Identifier for the customer who placed the order.",
+        "ProductCategory": "The category of the product sold.",
+        "SalesAmount": "The monetary value of the sale in USD.",
+        "OrderDate": "The date when the order was placed.",
+        "Region": "The geographical region where the sale occurred.",
+    },
+)
+
+# Configure PandasAI with LLM
+pai.config.set(
+    {
         "llm": llm,
-        "column_descriptions": column_descriptions,
         "verbose": True,  # Enable verbose logging to see prompts
         "enforce_privacy": False,  # Allow seeing the generated code
         "enable_logging": True,  # Enable detailed logging
-    },
+    }
 )
 
 # Example queries with prompt inspection
@@ -93,21 +98,21 @@ print("=== PandasAI Chat Examples with Prompt Inspection ===")
 print("\n" + "=" * 50)
 print("QUERY 1: What is the total sales amount?")
 print("=" * 50)
-response1 = sdf.chat("What is the total sales amount?")
+response1 = pai.chat("What is the total sales amount?", pandasai_df)
 print(f"RESPONSE: {response1}\n")
 
 # Query 2: Data analysis
 print("\n" + "=" * 50)
 print("QUERY 2: Show me sales by product category")
 print("=" * 50)
-response2 = sdf.chat("Show me sales by product category")
+response2 = pai.chat("Show me sales by product category", pandasai_df)
 print(f"RESPONSE: {response2}\n")
 
 # Query 3: Complex analysis
 print("\n" + "=" * 50)
 print("QUERY 3: Which region has the highest average sales?")
 print("=" * 50)
-response3 = sdf.chat("Which region has the highest average sales?")
+response3 = pai.chat("Which region has the highest average sales?", pandasai_df)
 print(f"RESPONSE: {response3}\n")
 
 print("=== End of Examples ===")
