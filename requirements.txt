@@ -1,0 +1,3 @@
+pandasai>=3.0.0b2
+pandasai_openai
+ipykernel

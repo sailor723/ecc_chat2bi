@@ -33,7 +33,94 @@
 - Python 3.8+
 - Node.js 16+
 - Python、JavaScript和Web开发的基础知识
-- OpenAI API密钥（或兼容的LLM提供商）
+- Azure OpenAI API密钥（或兼容的LLM提供商）
+
+## 🚀 快速开始
+
+### 1. 克隆仓库
+```bash
+git clone <repository-url>
+cd ecc_chat2bi
+```
+
+### 2. 安装依赖
+```bash
+# 安装Python依赖
+pip install -r requirements.txt
+
+# 或者创建虚拟环境（推荐）
+python -m venv venv_chat2bi
+source venv_chat2bi/bin/activate  # Linux/Mac
+# 或 venv_chat2bi\Scripts\activate  # Windows
+pip install -r requirements.txt
+```
+
+### 3. 设置环境变量
+```bash
+# 设置Azure OpenAI配置
+export AZURE_OPENAI_API_KEY="your_api_key"
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
+export AZURE_OPENAI_DEPLOYMENT="your_deployment_name"
+export AZURE_OPENAI_API_VERSION="2024-02-15-preview"
+```
+
+---
+
+## 📊 第1天预期输出
+
+运行第1天的示例后，您应该看到：
+
+### 从 `pandasAI.py` 的输出：
+```
+=== PandasAI聊天示例与提示检查 ===
+
+==================================================
+查询1：总销售额是多少？
+==================================================
+响应：总销售额是$2,292.44
+
+==================================================
+查询2：按产品类别显示销售情况
+==================================================
+响应：[按类别显示销售的数据框]
+
+==================================================
+查询3：哪个地区的平均销售额最高？
+==================================================
+响应：北部地区的平均销售额最高...
+
+=== 示例结束 ===
+
+==================================================
+提示模板检查
+==================================================
+默认PandasAI提示模板结构：
+------------------------------
+### 指令
+您是一个Python数据分析助手...
+```
+
+### 从 `prompt_inspector.py` 的输出：
+```
+=== PANDASAI提示检查器 ===
+此脚本将显示发送给LLM的实际提示
+
+=== 发送查询以查看提示 ===
+查询：'总销售额是多少？'
+==================================================
+
+[显示实际提示的详细日志输出]
+
+最终响应：总销售额是$2,292.44
+
+==================================================
+提示模板结构
+==================================================
+默认PandasAI提示模板：
+------------------------------
+### 指令
+您是一个Python数据分析助手...
+```
 
 ---
 
@@ -53,6 +140,205 @@
    - 创建Python虚拟环境并安装`pandasai`和`pandas`。
 3. **基本交互：**
    - 编写简单的Python脚本，将数据加载到`SmartDataframe`中并执行基于文本的查询。
+
+**🎯 第1天具体工作步骤：**
+
+1. **进入第1天目录：**
+   ```bash
+   cd 7_days_plan/day_1
+   ```
+
+2. **运行基础示例：**
+   ```bash
+   # 运行主要的PandasAI示例
+   python pandasAI.py
+   ```
+
+3. **检查提示模板：**
+   ```bash
+   # 运行提示检查器以了解PandasAI如何工作
+   python prompt_inspector.py
+   ```
+
+4. **查看实际源代码：**
+   ```bash
+   # 查看PandasAI的实际开源代码
+   python pandasai_actual_source_code.py
+   ```
+
+**📁 第1天文件说明：**
+- `pandasAI.py` - 主要的PandasAI聊天实现
+- `prompt_inspector.py` - 高级提示分析工具
+- `pandasai_actual_source_code.py` - 显示真实的PandasAI源代码
+
+**🔍 学习要点：**
+- 理解SmartDataframe与普通DataFrame的区别
+- 学习如何配置Azure OpenAI集成
+- 查看发送给LLM的实际提示
+- 了解PandasAI的内部架构和工作流程
+
+**📊 PandasAI实际流程图表：**
+
+以下是当您调用 `sdf.chat("What is the total sales amount?")` 时发生的完整流程：
+
+```mermaid
+graph TD
+    %% Entry Point
+    A[User calls sdf.chat] --> B[SmartDataframe.chat]
+    
+    %% Initial Validation
+    B --> C[Agent.chat]
+    C --> D{LLM Configured?}
+    D -->|No| E[Raise ValueError]
+    D -->|Yes| F[start_new_conversation]
+    
+    %% Query Processing
+    F --> G[_process_query]
+    G --> H[UserQuery query]
+    H --> I[Log Question]
+    I --> J[Log Running PandasAI]
+    
+    %% Code Generation Phase
+    J --> K[assign_prompt_id]
+    K --> L[generate_code_with_retries]
+    
+    L --> M[generate_code]
+    M --> N[memory.add query]
+    N --> O[Log Generating new code]
+    O --> P[get_chat_prompt_for_sql]
+    P --> Q[_code_generator.generate_code]
+    Q --> R[last_prompt_used = prompt]
+    
+    %% Code Generation Success Check
+    R --> S{Code Generation Success?}
+    S -->|No| T[Exception caught]
+    T --> U[attempts = 0]
+    U --> V{attempts <= max_retries?}
+    V -->|No| W[Log Maximum retry attempts exceeded]
+    V -->|Yes| X[_regenerate_code_after_error]
+    X --> Y[attempts++]
+    Y --> V
+    
+    %% Code Execution Phase
+    S -->|Yes| Z[execute_with_retries]
+    
+    Z --> AA[execute_code]
+    AA --> BB[Log Executing code]
+    BB --> CC[CodeExecutor state.config]
+    CC --> DD[add_to_env execute_sql_query]
+    
+    %% Sandbox Execution
+    DD --> EE{Sandbox Available?}
+    EE -->|Yes| FF[sandbox.execute code environment]
+    EE -->|No| GG[execute_and_return_result]
+    
+    %% Response Processing
+    FF --> HH[ResponseParser.parse result code]
+    GG --> HH
+    
+    %% Execution Success Check
+    HH --> II{Execution Success?}
+    II -->|No| JJ[Exception caught]
+    JJ --> KK[attempts = 0]
+    KK --> LL{attempts <= max_retries?}
+    LL -->|No| MM[Log Max retries reached]
+    LL -->|Yes| NN[_regenerate_code_after_error code error]
+    NN --> OO[attempts++]
+    OO --> LL
+    
+    %% Success Path
+    II -->|Yes| PP[Log Response generated successfully]
+    PP --> QQ[Return result to user]
+    
+    %% Styling - All boxes with black background and white text
+    style A fill:#000000,stroke:#ffffff,color:#ffffff
+    style B fill:#000000,stroke:#ffffff,color:#ffffff
+    style C fill:#000000,stroke:#ffffff,color:#ffffff
+    style D fill:#000000,stroke:#ffffff,color:#ffffff
+    style E fill:#000000,stroke:#ffffff,color:#ffffff
+    style F fill:#000000,stroke:#ffffff,color:#ffffff
+    style G fill:#000000,stroke:#ffffff,color:#ffffff
+    style H fill:#000000,stroke:#ffffff,color:#ffffff
+    style I fill:#000000,stroke:#ffffff,color:#ffffff
+    style J fill:#000000,stroke:#ffffff,color:#ffffff
+    style K fill:#000000,stroke:#ffffff,color:#ffffff
+    style L fill:#000000,stroke:#ffffff,color:#ffffff
+    style M fill:#000000,stroke:#ffffff,color:#ffffff
+    style N fill:#000000,stroke:#ffffff,color:#ffffff
+    style O fill:#000000,stroke:#ffffff,color:#ffffff
+    style P fill:#000000,stroke:#ffffff,color:#ffffff
+    style Q fill:#000000,stroke:#ffffff,color:#ffffff
+    style R fill:#000000,stroke:#ffffff,color:#ffffff
+    style S fill:#000000,stroke:#ffffff,color:#ffffff
+    style T fill:#000000,stroke:#ffffff,color:#ffffff
+    style U fill:#000000,stroke:#ffffff,color:#ffffff
+    style V fill:#000000,stroke:#ffffff,color:#ffffff
+    style W fill:#000000,stroke:#ffffff,color:#ffffff
+    style X fill:#000000,stroke:#ffffff,color:#ffffff
+    style Y fill:#000000,stroke:#ffffff,color:#ffffff
+    style Z fill:#000000,stroke:#ffffff,color:#ffffff
+    style AA fill:#000000,stroke:#ffffff,color:#ffffff
+    style BB fill:#000000,stroke:#ffffff,color:#ffffff
+    style CC fill:#000000,stroke:#ffffff,color:#ffffff
+    style DD fill:#000000,stroke:#ffffff,color:#ffffff
+    style EE fill:#000000,stroke:#ffffff,color:#ffffff
+    style FF fill:#000000,stroke:#ffffff,color:#ffffff
+    style GG fill:#000000,stroke:#ffffff,color:#ffffff
+    style HH fill:#000000,stroke:#ffffff,color:#ffffff
+    style II fill:#000000,stroke:#ffffff,color:#ffffff
+    style JJ fill:#000000,stroke:#ffffff,color:#ffffff
+    style KK fill:#000000,stroke:#ffffff,color:#ffffff
+    style LL fill:#000000,stroke:#ffffff,color:#ffffff
+    style MM fill:#000000,stroke:#ffffff,color:#ffffff
+    style NN fill:#000000,stroke:#ffffff,color:#ffffff
+    style OO fill:#000000,stroke:#ffffff,color:#ffffff
+    style PP fill:#000000,stroke:#ffffff,color:#ffffff
+    style QQ fill:#000000,stroke:#ffffff,color:#ffffff
+```
+
+**🔍 实际源代码洞察：**
+
+实际的PandasAI源代码揭示了一个复杂的架构：
+
+#### **1. 基于代理的架构：**
+```python
+# SmartDataframe将任务委托给Agent
+def chat(self, query: str, output_type: Optional[str] = None):
+    return self._agent.chat(query, output_type)
+```
+
+#### **2. 复杂的错误处理：**
+```python
+# 代码生成和执行的重试逻辑
+def generate_code_with_retries(self, query: str) -> Any:
+    max_retries = self._state.config.max_retries
+    # ... 重试逻辑和错误恢复
+```
+
+#### **3. 状态管理：**
+```python
+# 使用AgentState管理对话状态
+self._state.assign_prompt_id()
+self._state.memory.add(str(query), is_user=True)
+```
+
+#### **4. 代码生成与执行：**
+```python
+# 使用专门的类进行代码生成和执行
+code = self._code_generator.generate_code(prompt)
+result = self._response_parser.parse(result, code)
+```
+
+**主要特点：**
+- **代理类**: 使用专门的Agent而不是直接方法
+- **重试逻辑**: 代码生成和执行的复杂重试机制
+- **错误恢复**: 当错误发生时可以重新生成代码
+- **状态管理**: 使用AgentState进行对话管理
+- **代码生成**: 使用专门的CodeGenerator类
+- **代码执行**: 使用专门的CodeExecutor类，支持沙盒
+- **响应解析**: 使用ResponseParser格式化结果
+- **内存管理**: 适当的对话历史管理
+- **日志记录**: 整个过程的综合日志记录
 
 **PandasAI引擎架构：**
 
@@ -117,6 +403,34 @@ graph TD
 
 **学习资源：**
 - **官方文档：** [https://docs.pandas-ai.com/](https://docs.pandas-ai.com/) - 从**"开始使用"**部分开始。
+
+**🔧 第1天常见问题解决：**
+
+1. **Azure OpenAI配置错误：**
+   ```bash
+   # 确保环境变量正确设置
+   echo $AZURE_OPENAI_API_KEY
+   echo $AZURE_OPENAI_ENDPOINT
+   ```
+
+2. **依赖安装问题：**
+   ```bash
+   # 重新安装依赖
+   pip install --upgrade pandasai pandasai-openai
+   ```
+
+3. **虚拟环境激活：**
+   ```bash
+   # 确保在正确的虚拟环境中
+   source venv_chat2bi/bin/activate
+   which python
+   ```
+
+4. **查看详细日志：**
+   ```bash
+   # 在pandasAI.py中启用详细日志
+   # 设置 verbose=True 和 enable_logging=True
+   ```
 
 ### 第2天：FastAPI和Vue.js基础
 
